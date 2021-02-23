@@ -47,7 +47,7 @@ private:
     template <std::size_t... PayloadSequence, std::size_t... ArgsSequence>
     Ret InvokeImpl(IndexSequence<PayloadSequence...>, IndexSequence<ArgsSequence...>)
     {
-        return (mInstance.*mPtrToMemFun)(Get<PayloadSequence>(mPayload)..., Get<ArgsSequence>(mArguments)...);
+        return (mInstance.*mPtrToMemFun)(std::forward<decltype(Get<PayloadSequence>(mPayload))>(Get<PayloadSequence>(mPayload))..., std::forward<decltype(Get<ArgsSequence>(mArguments))>(Get<ArgsSequence>(mArguments))...);
     }
 };
 
@@ -80,7 +80,7 @@ private:
     template <std::size_t... PayloadSequence, std::size_t... ArgsSequence>
     Ret InvokeImpl(IndexSequence<PayloadSequence...>, IndexSequence<ArgsSequence...>)
     {
-        return (mInstance.*mPtrToConstMemFun)(Get<PayloadSequence>(mPayload)..., Get<ArgsSequence>(mArguments)...);
+        return (mInstance.*mPtrToConstMemFun)(std::forward<decltype(Get<PayloadSequence>(mPayload))>(Get<PayloadSequence>(mPayload))..., std::forward<decltype(Get<ArgsSequence>(mArguments))>(Get<ArgsSequence>(mArguments))...);
     }
 };
 
@@ -119,7 +119,7 @@ private:
     template <std::size_t... PayloadSequence, std::size_t... ArgsSequence>
     Ret InvokeImpl(IndexSequence<PayloadSequence...>, IndexSequence<ArgsSequence...>)
     {
-        return (*mFunObject)(Get<PayloadSequence>(mPayload)..., Get<ArgsSequence>(mArguments)...);
+        return (*mFunObject)(std::forward<decltype(Get<PayloadSequence>(mPayload))>(Get<PayloadSequence>(mPayload))..., std::forward<decltype(Get<ArgsSequence>(mArguments))>(Get<ArgsSequence>(mArguments))...);
     }
 };
 
