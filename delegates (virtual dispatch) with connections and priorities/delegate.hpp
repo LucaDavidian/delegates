@@ -77,11 +77,14 @@ public:
 
     Delegate &operator=(Delegate &&other);
 
-    template <typename T>
-    void Bind(T &instance, Ret (T::*ptrToMemFun)(Args...), unsigned int priority = -1);
+    // template <typename T>
+    // void Bind(T &instance, Ret (T::*ptrToMemFun)(Args...), unsigned int priority = -1);
 
-    template <typename T>
-    void Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority = -1);
+    // template <typename T>
+    // void Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority = -1);
+
+    template <typename T, typename PtrToMemFun>
+    std::enable_if_t<std::is_member_function_pointer_v<PtrToMemFun>> Bind(T &instance, PtrToMemFun ptrToMemFun, unsigned int priority = -1);
 
     template <typename T>
     void Bind(T &&funObj, unsigned int priority = -1);
@@ -120,25 +123,36 @@ Delegate<Ret(Args...)> &Delegate<Ret(Args...)>::operator=(Delegate &&other)
     return *this;
 }
 
+// template <typename Ret, typename... Args>
+// template <typename T>
+// void Delegate<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToMemFun)(Args...), unsigned int priority)
+// {
+//     if (mCallableWrapper)
+//         throw DelegateAlreadyBoundException();
+
+//     mCallableWrapper = new MemFunCallableWrapper<T,Ret(Args...)>(instance, ptrToMemFun);
+//     mPriority = priority;
+// }
+
+// template <typename Ret, typename... Args>
+// template <typename T>
+// void Delegate<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority)
+// {
+//     if (mCallableWrapper)
+//         throw DelegateAlreadyBoundException();
+
+//     mCallableWrapper = new ConstMemFunCallableWrapper<T,Ret(Args...)>(instance, ptrToConstMemFun);
+//     mPriority = priority;
+// }
+
 template <typename Ret, typename... Args>
-template <typename T>
-void Delegate<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToMemFun)(Args...), unsigned int priority)
+template <typename T, typename PtrToMemFun>
+std::enable_if_t<std::is_member_function_pointer_v<PtrToMemFun>> Delegate<Ret(Args...)>::Bind(T &instance, PtrToMemFun ptrToMemFun, unsigned int priority)
 {
     if (mCallableWrapper)
         throw DelegateAlreadyBoundException();
 
-    mCallableWrapper = new MemFunCallableWrapper<T,Ret(Args...)>(instance, ptrToMemFun);
-    mPriority = priority;
-}
-
-template <typename Ret, typename... Args>
-template <typename T>
-void Delegate<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority)
-{
-    if (mCallableWrapper)
-        throw DelegateAlreadyBoundException();
-
-    mCallableWrapper = new ConstMemFunCallableWrapper<T,Ret(Args...)>(instance, ptrToConstMemFun);
+    mCallableWrapper = new MemFunCallableWrapper<Ret(Args...), T, PtrToMemFun>(instance, ptrToMemFun);
     mPriority = priority;
 }
 
@@ -149,7 +163,7 @@ void Delegate<Ret(Args...)>::Bind(T &&funObj, unsigned int priority)
     if (mCallableWrapper)
         throw DelegateAlreadyBoundException();
 
-    mCallableWrapper = new FunObjCallableWrapper<std::remove_reference_t<T>,Ret(Args...)>(std::forward<T>(funObj));  
+    mCallableWrapper = new FunObjCallableWrapper<Ret(Args...), std::remove_reference_t<T>>(std::forward<T>(funObj));  
     mPriority = priority;
 }
 

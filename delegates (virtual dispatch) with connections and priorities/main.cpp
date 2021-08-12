@@ -5,13 +5,6 @@
 SIGNAL_RET_ONE_PARAM(MySig, int, double);
 MySig sig;
 
-int FreeFunction(int, int) 
-{
-    std::cout << "in free function" << std::endl;
-
-    return 1;
-}
-
 class MyClass
 {
 public:
@@ -26,10 +19,10 @@ public:
 
     ~MyClass() { for (auto &connection : mConnections) connection.Disconnect(); }
 
-    int MemberFunction(double d) { std::cout << "in member function" << std::endl; return int(++i * d); }
+    int MemberFunction(int d) { std::cout << "in member function" << std::endl; return int(++i * d); }
     int ConstMemberFunction(double d) const { std::cout << "in const member function" << std::endl; return int(i * d); }
-    int operator()(double d) { std::cout << "in overloaded function call operator" << std::endl; return (int)(++i + d); }
-    int operator()(double d) const { std::cout << "in const overloaded function call operator" << std::endl; return (int)(i + d); }
+    char operator()(double c) { std::cout << "in overloaded function call operator" << std::endl; return (int)(++i + c); }
+    float operator()(float d) const { std::cout << "in const overloaded function call operator" << std::endl; return (int)(i + d); }
     static int StaticMemberFunction(double d) { std::cout << "in static member function" << std::endl; return int(10 + d); }
 private:
     int i;
@@ -55,8 +48,9 @@ int main(int argc, char *argv[])
     auto lambda = [&i](double) { std::cout << "in lambda" << std::endl; return 10; };
     sig.Bind(lambda, 1);
 
-    sig.Bind([i](double d) mutable -> int { std::cout << "in temp lambda" << std::endl; return 1; }, 2);
+    sig.Bind([i](int d) mutable -> int { std::cout << "in temp lambda" << std::endl; return 10; }, 2);
 
+    sig(1.20);
     sig([](int i) -> bool { return i == 10; }, 1.20);
 
 

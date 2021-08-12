@@ -17,47 +17,63 @@ protected:
 };
 
 /***** wrapper around a non-const member function *****/
-template <typename T, typename Signature>
+// template <typename T, typename Signature>
+// class MemFunCallableWrapper;
+
+// template <typename T,typename Ret, typename... Args>
+// class MemFunCallableWrapper<T, Ret(Args...)> : public CallableWrapper<Ret(Args...)>
+// {
+// private:
+//     using PtrToMemFun = Ret (T::*)(Args...);
+// public:
+//     MemFunCallableWrapper(T &instance, PtrToMemFun ptrToMemFun) : mInstance(instance), mPtrToMemFun(ptrToMemFun) {}
+
+//     Ret Invoke(Args... args) override {  return (mInstance.*mPtrToMemFun)(std::forward<Args>(args)...); }
+// private:
+//     T &mInstance;
+//     PtrToMemFun mPtrToMemFun;
+// };
+
+/***** wrapper around a const member function *****/
+// template <typename T, typename Signature>
+// class ConstMemFunCallableWrapper;
+
+// template <typename T,typename Ret, typename... Args>
+// class ConstMemFunCallableWrapper<T, Ret(Args...)> : public CallableWrapper<Ret(Args...)>
+// {
+// private:
+//     using PtrToConstMemFun = Ret (T::*)(Args...) const;
+// public:
+//     ConstMemFunCallableWrapper(T &instance, PtrToConstMemFun ptrToConstMemFun) : mInstance(instance), mPtrToConstMemFun(ptrToConstMemFun) {}
+    
+//     Ret Invoke(Args... args) override {  return (mInstance.*mPtrToConstMemFun)(std::forward<Args>(args)...); }
+// private:
+//     T &mInstance;
+//     PtrToConstMemFun mPtrToConstMemFun;
+// };
+
+/***** wrapper around a (possibly const) member function (this implementation provides automatic arguments and return type conversions) *****/
+template <typename Signature, typename T, typename PtrToMemFun>
 class MemFunCallableWrapper;
 
-template <typename T,typename Ret, typename... Args>
-class MemFunCallableWrapper<T, Ret(Args...)> : public CallableWrapper<Ret(Args...)>
+template <typename Ret, typename... Args, typename T, typename PtrToMemFun>
+class MemFunCallableWrapper<Ret(Args...), T, PtrToMemFun> : public CallableWrapper<Ret(Args...)>
 {
-private:
-    using PtrToMemFun = Ret (T::*)(Args...);
 public:
     MemFunCallableWrapper(T &instance, PtrToMemFun ptrToMemFun) : mInstance(instance), mPtrToMemFun(ptrToMemFun) {}
 
-    Ret Invoke(Args... args) override {  return (mInstance.*mPtrToMemFun)(std::forward<Args>(args)...); }
+    Ret Invoke(Args... args) override { return (mInstance.*mPtrToMemFun)(std::forward<Args>(args)...); }
 private:
     T &mInstance;
     PtrToMemFun mPtrToMemFun;
 };
 
-/***** wrapper around a const member function *****/
-template <typename T, typename Signature>
-class ConstMemFunCallableWrapper;
-
-template <typename T,typename Ret, typename... Args>
-class ConstMemFunCallableWrapper<T, Ret(Args...)> : public CallableWrapper<Ret(Args...)>
-{
-private:
-    using PtrToConstMemFun = Ret (T::*)(Args...) const;
-public:
-    ConstMemFunCallableWrapper(T &instance, PtrToConstMemFun ptrToConstMemFun) : mInstance(instance), mPtrToConstMemFun(ptrToConstMemFun) {}
-    
-    Ret Invoke(Args... args) override {  return (mInstance.*mPtrToConstMemFun)(std::forward<Args>(args)...); }
-private:
-    T &mInstance;
-    PtrToConstMemFun mPtrToConstMemFun;
-};
-
 /***** wrapper around a function object/lambda *****/
-template <typename T, typename Signature>
+template <typename Signature, typename T>
 class FunObjCallableWrapper;
 
-template <typename T, typename Ret, typename... Args>
-class FunObjCallableWrapper<T,Ret(Args...)> : public CallableWrapper<Ret(Args...)>
+template <typename Ret, typename... Args, typename T>
+class FunObjCallableWrapper<Ret(Args...), T> : public CallableWrapper<Ret(Args...)>
 {
 public:
     FunObjCallableWrapper(T &funObject) : mFunObject(&funObject), mAllocated(false) {}

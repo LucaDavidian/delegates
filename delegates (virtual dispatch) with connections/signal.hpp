@@ -23,11 +23,14 @@ class Signal<Ret(Args...)>
 {
 friend class Connection;
 public:
-    template <typename T>
-    Connection Bind(T &instance, Ret (T::*ptrToMemFun)(Args...));
+    // template <typename T>
+    // Connection Bind(T &instance, Ret (T::*ptrToMemFun)(Args...));
 
-    template <typename T>
-    Connection Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const);
+    // template <typename T>
+    // Connection Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const);
+
+    template <typename T, typename PtrToMemFun>
+    Connection Bind(T &instance, PtrToMemFun ptrToMemFun);
 
     template <typename T>
     Connection Bind(T &&funObj);
@@ -43,24 +46,35 @@ private:
     std::vector<Delegate<Ret(Args...)>> mDelegates;
 };
 
-template <typename Ret, typename... Args>
-template <typename T>
-Connection Signal<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToMemFun)(Args...))
-{   
-    Delegate<Ret(Args...)> delegate;
-    mDelegates.push_back(std::move(delegate));
-    mDelegates.back().Bind(instance, ptrToMemFun);
+// template <typename Ret, typename... Args>
+// template <typename T>
+// Connection Signal<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToMemFun)(Args...))
+// {   
+//     Delegate<Ret(Args...)> delegate;
+//     mDelegates.push_back(std::move(delegate));
+//     mDelegates.back().Bind(instance, ptrToMemFun);
 
-    return Connection(this, mDelegates.back().mCallableWrapper);
-}
+//     return Connection(this, mDelegates.back().mCallableWrapper);
+// }
+
+// template <typename Ret, typename... Args>
+// template <typename T>
+// Connection Signal<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const)
+// {
+//     Delegate<Ret(Args...)> delegate;
+//     mDelegates.push_back(std::move(delegate));
+//     mDelegates.back().Bind(instance, ptrToConstMemFun);
+
+//     return Connection(this, mDelegates.back().mCallableWrapper); 
+// }
 
 template <typename Ret, typename... Args>
-template <typename T>
-Connection Signal<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const)
+template <typename T, typename PtrToMemFun>
+Connection Signal<Ret(Args...)>::Bind(T &instance, PtrToMemFun ptrToMemFun)
 {
     Delegate<Ret(Args...)> delegate;
     mDelegates.push_back(std::move(delegate));
-    mDelegates.back().Bind(instance, ptrToConstMemFun);
+    mDelegates.back().Bind(instance, ptrToMemFun);
 
     return Connection(this, mDelegates.back().mCallableWrapper); 
 }

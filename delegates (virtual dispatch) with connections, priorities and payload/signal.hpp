@@ -4,6 +4,7 @@
 #include "delegate.hpp"
 #define TYPE_PARAM_HEAP_QUEUE
 #include "../../data structures/ADT/priority queue/priority_queue.hpp"
+#include <type_traits>
 
 /***** signal typedefs *****/
 #define SIGNAL(SignalType)                         typedef Signal<void()> SignalType
@@ -24,11 +25,14 @@ class Signal<Ret(Args...)>
 {
 friend class Connection;
 public:
-    template <typename T, typename... Payload>
-    Connection Bind(T &instance, Ret (T::*ptrToMemFun)(Args...), unsigned int priority, Payload&&... payload);
+    // template <typename T, typename... Payload>
+    // Connection Bind(T &instance, Ret (T::*ptrToMemFun)(Args...), unsigned int priority, Payload&&... payload);
 
-    template <typename T, typename... Payload>
-    Connection Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority, Payload&&... payload);
+    // template <typename T, typename... Payload>
+    // Connection Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority, Payload&&... payload);
+
+    template <typename T, typename PtrToMemFun, typename... Payload>
+    std::enable_if_t<std::is_member_function_pointer_v<PtrToMemFun>, Connection> Bind(T &instance, PtrToMemFun ptrToMemFun, unsigned int priority, Payload&&... payload);
 
     template <typename T, typename... Payload>
     Connection Bind(T &&funObj, unsigned int priority, Payload&&... payload);
@@ -50,24 +54,36 @@ private:
     PriorityQueue<Delegate<Ret(Args...)>> mDelegates;
 };
 
-template <typename Ret, typename... Args>
-template <typename T, typename... Payload>
-Connection Signal<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToMemFun)(Args...), unsigned int priority, Payload&&... payload)
-{   
-    Delegate<Ret(Args...)> delegate;
-    delegate.Bind(instance, ptrToMemFun, priority, std::forward<Payload>(payload)...);
-    CallableWrapper<Ret(Args...)> *callable = delegate.mCallableWrapper;
-    mDelegates.Insert(std::move(delegate));
+// template <typename Ret, typename... Args>
+// template <typename T, typename... Payload>
+// Connection Signal<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToMemFun)(Args...), unsigned int priority, Payload&&... payload)
+// {   
+//     Delegate<Ret(Args...)> delegate;
+//     delegate.Bind(instance, ptrToMemFun, priority, std::forward<Payload>(payload)...);
+//     CallableWrapper<Ret(Args...)> *callable = delegate.mCallableWrapper;
+//     mDelegates.Insert(std::move(delegate));
 
-    return Connection(this, callable); 
-}
+//     return Connection(this, callable); 
+// }
+
+// template <typename Ret, typename... Args>
+// template <typename T, typename... Payload>
+// Connection Signal<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority, Payload&&... payload)
+// {
+//     Delegate<Ret(Args...)> delegate;
+//     delegate.Bind(instance, ptrToConstMemFun, priority, std::forward<Payload>(payload)...);
+//     CallableWrapper<Ret(Args...)> *callable = delegate.mCallableWrapper;
+//     mDelegates.Insert(std::move(delegate));
+
+//     return Connection(this, callable); 
+// }
 
 template <typename Ret, typename... Args>
-template <typename T, typename... Payload>
-Connection Signal<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority, Payload&&... payload)
+template <typename T, typename PtrToMemFun, typename... Payload>
+std::enable_if_t<std::is_member_function_pointer_v<PtrToMemFun>, Connection> Signal<Ret(Args...)>::Bind(T &instance, PtrToMemFun ptrToMemFun, unsigned int priority, Payload&&... payload)
 {
     Delegate<Ret(Args...)> delegate;
-    delegate.Bind(instance, ptrToConstMemFun, priority, std::forward<Payload>(payload)...);
+    delegate.Bind(instance, ptrToMemFun, priority, std::forward<Payload>(payload)...);
     CallableWrapper<Ret(Args...)> *callable = delegate.mCallableWrapper;
     mDelegates.Insert(std::move(delegate));
 

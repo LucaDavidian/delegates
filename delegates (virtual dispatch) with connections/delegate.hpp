@@ -70,11 +70,14 @@ public:
 
     Delegate &operator=(Delegate &&other);
 
-    template <typename T>
-    void Bind(T &instance, Ret (T::*ptrToMemFun)(Args...));
+    // template <typename T>
+    // void Bind(T &instance, Ret (T::*ptrToMemFun)(Args...));
 
-    template <typename T>
-    void Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const);
+    // template <typename T>
+    // void Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const);
+
+    template <typename T, typename PtrToMemFun>
+    void Bind(T &instance, PtrToMemFun ptrToMemFun);
 
     template <typename T>
     void Bind(T &&funObj);
@@ -112,24 +115,34 @@ Delegate<Ret(Args...)> &Delegate<Ret(Args...)>::operator=(Delegate &&other)
     return *this;
 }
 
+// template <typename Ret, typename... Args>
+// template <typename T>
+// void Delegate<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToMemFun)(Args...))
+// {
+//     if (mCallableWrapper)
+//         throw DelegateAlreadyBoundException();
+
+//     mCallableWrapper = new MemFunCallableWrapper<T,Ret(Args...)>(instance, ptrToMemFun);
+// }
+
+// template <typename Ret, typename... Args>
+// template <typename T>
+// void Delegate<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const)
+// {
+//     if (mCallableWrapper)
+//         throw DelegateAlreadyBoundException();
+
+//     mCallableWrapper = new ConstMemFunCallableWrapper<T,Ret(Args...)>(instance, ptrToConstMemFun);
+// }
+
 template <typename Ret, typename... Args>
-template <typename T>
-void Delegate<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToMemFun)(Args...))
+template <typename T, typename PtrToMemFun>
+void Delegate<Ret(Args...)>::Bind(T &instance, PtrToMemFun ptrToMemFun)
 {
     if (mCallableWrapper)
         throw DelegateAlreadyBoundException();
 
-    mCallableWrapper = new MemFunCallableWrapper<T,Ret(Args...)>(instance, ptrToMemFun);
-}
-
-template <typename Ret, typename... Args>
-template <typename T>
-void Delegate<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const)
-{
-    if (mCallableWrapper)
-        throw DelegateAlreadyBoundException();
-
-    mCallableWrapper = new ConstMemFunCallableWrapper<T,Ret(Args...)>(instance, ptrToConstMemFun);
+    mCallableWrapper = new MemFunCallableWrapper<Ret(Args...), T, PtrToMemFun>(instance, ptrToMemFun);
 }
 
 template <typename Ret, typename... Args>
@@ -139,7 +152,7 @@ void Delegate<Ret(Args...)>::Bind(T &&funObj)
     if (mCallableWrapper)
         throw DelegateAlreadyBoundException();
 
-    mCallableWrapper = new FunObjCallableWrapper<std::remove_reference_t<T>,Ret(Args...)>(std::forward<T>(funObj));  
+    mCallableWrapper = new FunObjCallableWrapper<Ret(Args...), std::remove_reference_t<T>>(std::forward<T>(funObj));  
 }
 
 template <typename Ret, typename... Args>

@@ -77,11 +77,14 @@ public:
 
     Delegate &operator=(Delegate &&other);
 
-    template <typename T, typename... Payload>
-    void Bind(T &instance, Ret (T::*ptrToMemFun)(Args...), unsigned int priority, Payload&&... payload);
+    // template <typename T, typename... Payload>
+    // void Bind(T &instance, Ret (T::*ptrToMemFun)(Args...), unsigned int priority, Payload&&... payload);
 
-    template <typename T, typename... Payload>
-    void Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority, Payload&&... payload);
+    // template <typename T, typename... Payload>
+    // void Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority, Payload&&... payload);
+
+    template <typename T, typename PtrToMemFun, typename... Payload>
+    std::enable_if_t<std::is_member_function_pointer_v<PtrToMemFun>> Bind(T &instance, PtrToMemFun ptrToConstMemFun, unsigned int priority, Payload&&... payload);
 
     template <typename T, typename... Payload>
     void Bind(T &&funObj, unsigned int priority, Payload&&... payload);
@@ -120,25 +123,36 @@ Delegate<Ret(Args...)> &Delegate<Ret(Args...)>::operator=(Delegate &&other)
     return *this;
 }
 
+// template <typename Ret, typename... Args>
+// template <typename T, typename... Payload>
+// void Delegate<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToMemFun)(Args...), unsigned int priority, Payload&&... payload)
+// {
+//     if (mCallableWrapper)
+//         throw DelegateAlreadyBoundException();
+
+//     mCallableWrapper = new MemFunCallableWrapper<T,Ret(Args...), Payload...>(instance, ptrToMemFun, std::forward<Payload>(payload)...);
+//     mPriority = priority;
+// }
+
+// template <typename Ret, typename... Args>
+// template <typename T, typename... Payload>
+// void Delegate<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority, Payload&&... payload)
+// {
+//     if (mCallableWrapper)
+//         throw DelegateAlreadyBoundException();
+
+//     mCallableWrapper = new ConstMemFunCallableWrapper<T,Ret(Args...), Payload...>(instance, ptrToConstMemFun, std::forward<Payload>(payload)...);
+//     mPriority = priority;
+// }
+
 template <typename Ret, typename... Args>
-template <typename T, typename... Payload>
-void Delegate<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToMemFun)(Args...), unsigned int priority, Payload&&... payload)
+template <typename T, typename PtrToMemFun, typename... Payload>
+std::enable_if_t<std::is_member_function_pointer_v<PtrToMemFun>> Delegate<Ret(Args...)>::Bind(T &instance, PtrToMemFun ptrToMemFun, unsigned int priority, Payload&&... payload)
 {
     if (mCallableWrapper)
         throw DelegateAlreadyBoundException();
 
-    mCallableWrapper = new MemFunCallableWrapper<T,Ret(Args...), Payload...>(instance, ptrToMemFun, std::forward<Payload>(payload)...);
-    mPriority = priority;
-}
-
-template <typename Ret, typename... Args>
-template <typename T, typename... Payload>
-void Delegate<Ret(Args...)>::Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority, Payload&&... payload)
-{
-    if (mCallableWrapper)
-        throw DelegateAlreadyBoundException();
-
-    mCallableWrapper = new ConstMemFunCallableWrapper<T,Ret(Args...), Payload...>(instance, ptrToConstMemFun, std::forward<Payload>(payload)...);
+    mCallableWrapper = new MemFunCallableWrapper<Ret(Args...), T, PtrToMemFun, Payload...>(instance, ptrToMemFun, std::forward<Payload>(payload)...);
     mPriority = priority;
 }
 
@@ -149,7 +163,7 @@ void Delegate<Ret(Args...)>::Bind(T &&funObj, unsigned int priority, Payload&&..
     if (mCallableWrapper)
         throw DelegateAlreadyBoundException();
 
-    mCallableWrapper = new FunObjCallableWrapper<std::remove_reference_t<T>,Ret(Args...), Payload...>(std::forward<T>(funObj), std::forward<Payload>(payload)...);  
+    mCallableWrapper = new FunObjCallableWrapper<Ret(Args...), std::remove_reference_t<T>, Payload...>(std::forward<T>(funObj), std::forward<Payload>(payload)...);  
     mPriority = priority;
 }
 
