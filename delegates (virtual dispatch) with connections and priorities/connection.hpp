@@ -29,4 +29,13 @@ private:
     }
 };
 
+class AutoConnection : public Connection
+{
+public:
+    ~AutoConnection() 
+    {
+        Disconnect();        
+    }
+}
+
 #endif  // CONNECTION_H
