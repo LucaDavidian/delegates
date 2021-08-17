@@ -32,15 +32,4 @@ private:
     }
 };
 
-class AutoConnection : public Connection
-{
-public:
-    ~AutoConnection() 
-    {
-        Disconnect();        
-    }
-};
-
-#endif  // CONNECTION_H
-
 #endif  // CONNECTION_H
