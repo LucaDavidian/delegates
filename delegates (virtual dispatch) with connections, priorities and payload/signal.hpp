@@ -23,7 +23,7 @@ class Signal;
 template <typename Ret, typename... Args>
 class Signal<Ret(Args...)>  
 {
-friend class Connection;
+    friend class Connection;
 public:
     // template <typename T, typename... Payload>
     // Connection Bind(T &instance, Ret (T::*ptrToMemFun)(Args...), unsigned int priority, Payload&&... payload);
@@ -31,6 +31,12 @@ public:
     // template <typename T, typename... Payload>
     // Connection Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority, Payload&&... payload);
 
+    // note: by using a template type parameter as a pointer to member function
+    // 1. there's no need for two separate functions (one for const member functions and
+    // one for non-const member functions) and 
+    // 2. the Bind function can accept member functions whose signature doesn't match 
+    // exactly that of the Signal (the arguments and return types must be convertible 
+    // to those in the Signal's signature)
     template <typename T, typename PtrToMemFun, typename... Payload>
     std::enable_if_t<std::is_member_function_pointer_v<PtrToMemFun>, Connection> Bind(T &instance, PtrToMemFun ptrToMemFun, unsigned int priority, Payload&&... payload);
 
@@ -48,6 +54,8 @@ public:
 
     template <typename F>
     void Invoke(const F &f, Args... args);
+
+    void Clear();
 private:
     void Unbind(CallableWrapper<Ret(Args...)> *callableWrapper);
 
@@ -185,6 +193,13 @@ void Signal<Ret(Args...)>::Invoke(const F &f, Args... args)
         mDelegates.Insert(std::move(const_cast<Delegate<Ret(Args...)>&>(queue.Peek())));
         queue.Remove();
     }
+}
+
+template <typename Ret, typename... Args>
+void Signal<Ret(Args...)>::Clear()
+{
+    while (!mDelegates.Empty())
+        mDelegates.Remove();
 }
 
 #endif  // SIGNAL_H

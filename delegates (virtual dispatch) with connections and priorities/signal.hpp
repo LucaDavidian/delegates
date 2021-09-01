@@ -31,6 +31,12 @@ public:
     // template <typename T>
     // Connection Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority = -1);
 
+    // note: by using a template type parameter as a pointer to member function
+    // 1. there's no need for two separate functions (one for const member functions and
+    // one for non-const member functions) and 
+    // 2. the Bind function can accept member functions whose signature doesn't match 
+    // exactly that of the Signal (the arguments and return types must be convertible 
+    // to those in the Signal's signature)
     template <typename T, typename PtrToMemFun>
     std::enable_if_t<std::is_member_function_pointer_v<PtrToMemFun>, Connection> Bind(T &instance, PtrToMemFun ptrToMemFun, unsigned int priority = -1);
 
