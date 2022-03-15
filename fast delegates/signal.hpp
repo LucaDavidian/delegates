@@ -5,9 +5,9 @@
 #include <vector>
 
 /***** signal typedefs *****/
-#define SIGNAL(SignalType)                         typedef Signal<void()> SignalType
-#define SIGNAL_ONE_PARAM(SignalType, par0)         typedef Signal<void(par0)> SignalType
-#define SIGNAL_TWO_PARAM(SignalType, par0, par1)   typedef Signal<void(par0, par1)> SignalType
+#define SIGNAL(SignalType)                                  typedef Signal<void()> SignalType
+#define SIGNAL_ONE_PARAM(SignalType, par0)                  typedef Signal<void(par0)> SignalType
+#define SIGNAL_TWO_PARAM(SignalType, par0, par1)            typedef Signal<void(par0, par1)> SignalType
 
 #define SIGNAL_RET(SignalType, ret)                         typedef Signal<ret()> SignalType
 #define SIGNAL_RET_ONE_PARAM(SignalType, ret, par0)         typedef Signal<ret(par0)> SignalType

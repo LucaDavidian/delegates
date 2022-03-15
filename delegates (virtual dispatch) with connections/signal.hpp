@@ -5,9 +5,9 @@
 #include <vector>
 
 /***** signal typedefs *****/
-#define SIGNAL(SignalType)                         typedef Signal<void()> SignalType
-#define SIGNAL_ONE_PARAM(SignalType, par0)         typedef Signal<void(par0)> SignalType
-#define SIGNAL_TWO_PARAM(SignalType, par0, par1)   typedef Signal<void(par0, par1)> SignalType
+#define SIGNAL(SignalType)                                  typedef Signal<void()> SignalType
+#define SIGNAL_ONE_PARAM(SignalType, par0)                  typedef Signal<void(par0)> SignalType
+#define SIGNAL_TWO_PARAM(SignalType, par0, par1)            typedef Signal<void(par0, par1)> SignalType
 
 #define SIGNAL_RET(SignalType, ret)                         typedef Signal<ret()> SignalType
 #define SIGNAL_RET_ONE_PARAM(SignalType, ret, par0)         typedef Signal<ret(par0)> SignalType
@@ -30,13 +30,14 @@ public:
     // Connection Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const);
 
     // note: by using a template type parameter as a pointer to member function
-    // 1. there's no need for two separate functions (one for const member functions and
-    // one for non-const member functions) and 
+    // 1. there's no need for two separate Bind member functions (one for const member functions 
+    //    and one for non-const member functions) and 
     // 2. the Bind function can accept member functions whose signature doesn't match 
-    // exactly that of the Signal (the arguments and return types must be convertible 
-    // to those in the Signal's signature)
+    //    exactly that of the delegate (the delegate musr accept parameters that can be converted to
+    //    those in the bound function signature and the bound function return type must be convertible 
+    //    to that in the delegate's signature)
     template <typename T, typename PtrToMemFun>
-    Connection Bind(T &instance, PtrToMemFun ptrToMemFun);
+    std::enable_if_t<std::is_member_function_pointer_v<PtrToMemFun>, Connection> Bind(T &instance, PtrToMemFun ptrToMemFun);
 
     template <typename T>
     Connection Bind(T &&funObj);
@@ -76,7 +77,7 @@ private:
 
 template <typename Ret, typename... Args>
 template <typename T, typename PtrToMemFun>
-Connection Signal<Ret(Args...)>::Bind(T &instance, PtrToMemFun ptrToMemFun)
+std::enable_if_t<std::is_member_function_pointer_v<PtrToMemFun>, Connection> Signal<Ret(Args...)>::Bind(T &instance, PtrToMemFun ptrToMemFun)
 {
     Delegate<Ret(Args...)> delegate;
     mDelegates.push_back(std::move(delegate));

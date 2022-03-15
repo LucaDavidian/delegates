@@ -84,11 +84,12 @@ public:
     // void Bind(T &instance, Ret (T::*ptrToConstMemFun)(Args...) const, unsigned int priority, Payload&&... payload);
 
     // note: by using a template type parameter as a pointer to member function
-    // 1. there's no need for two separate functions (one for const member functions and
-    // one for non-const member functions) and 
+    // 1. there's no need for two separate Bind member functions (one for const member functions 
+    //    and one for non-const member functions) and 
     // 2. the Bind function can accept member functions whose signature doesn't match 
-    // exactly that of the Delegate (the arguments and return types must be convertible 
-    // to those in the Delegate's signature)
+    //    exactly that of the delegate (the delegate musr accept parameters that can be converted to
+    //    those in the bound function signature and the bound function return type must be convertible 
+    //    to that in the delegate's signature)
     template <typename T, typename PtrToMemFun, typename... Payload>
     std::enable_if_t<std::is_member_function_pointer_v<PtrToMemFun>> Bind(T &instance, PtrToMemFun ptrToConstMemFun, unsigned int priority, Payload&&... payload);
 

@@ -5,9 +5,9 @@
 SIGNAL_RET_TWO_PARAM(MySig, int, double, int);
 MySig sig;
 
-int FreeFunction(double, int) 
+int FreeFunction(double d, int i) 
 {
-    std::cout << "in free function" << std::endl;
+    std::cout << "in free function:" << d << ", " << i << std::endl;
 
     return 1;
 }
@@ -59,6 +59,16 @@ int main(int argc, char *argv[])
 
     sig(/* [](int i) -> bool { return i == 10; }, */ 1.20, 10);
 
+    sig.Clear();
+    
+    std::cout << "**********************" << std::endl;
+
+    sig(1.2, 11);  // empty signal
+
+    std::cout << "**********************" << std::endl;
+
+    sig.Bind(&FreeFunction, 1, 0.2, 10);
+    sig(0.0, 0);
 
     return 0;
 }
