@@ -1,8 +1,9 @@
 #ifndef SIGNAL_H
 #define SIGNAL_H
 
-#include "delegate.hpp"
 #include <vector>
+#include <type_traits>
+#include "delegate.hpp"
 
 /***** signal typedefs *****/
 #define SIGNAL(SignalType)                                  typedef Signal<void()> SignalType

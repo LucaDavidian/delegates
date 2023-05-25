@@ -10,7 +10,7 @@ class CallableWrapper;
 class Connection
 {
 public:
-    Connection() : mSignal(nullptr), mCallableWrapper(nullptr), mDisconnectFunction(nullptr) {}
+    Connection() : mSignal(nullptr), mCallableWrapper(nullptr), mDisconnectFunction(nullptr) {}   // null object
     
     template <typename Ret, typename... Args>
     Connection(Signal<Ret(Args...)> *signal, CallableWrapper<Ret(Args...)> *callableWrapper) : mSignal(signal), mCallableWrapper(callableWrapper), mDisconnectFunction(&DisconnectFunction<Ret, Args...>) {}

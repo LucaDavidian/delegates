@@ -52,10 +52,10 @@ int main(int argc, char *argv[])
 
     int i = 10;
 
-    auto lambda = [&i](double d, int i) { std::cout << "in lambda: " << d << " " << i << std::endl; return 10; };
+    auto lambda = [&i](double d, int ii) { std::cout << "in lambda: " << d << " " << ii << std::endl; return 10; };
     sig.Bind(lambda, 1, 3.3, 0);
 
-    sig.Bind([i](double d, int i) mutable -> int { std::cout << "in temp lambda: " << d << " " << i << std::endl; return 1; }, 2);
+    sig.Bind([i](double d, int ii) mutable -> int { std::cout << "in temp lambda: " << d << " " << ii << std::endl; return 1; }, 2);
 
     sig(/* [](int i) -> bool { return i == 10; }, */ 1.20, 10);
 
