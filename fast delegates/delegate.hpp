@@ -54,11 +54,11 @@ public:
     explicit operator bool() const { return mFunction != nullptr; }
 
     Ret operator()(Args... args) { return mFunction(&mData, std::forward<Args>(args)...); }
-    Ret Invoke(Args... args) { return mFunction(&mData, std::forward<Args>(args)...); }
+    Ret Invoke(Args... args) { return (*this)(&mData, std::forward<Args>(args)...); }
 private:
     //typedef typename std::aligned_storage<sizeof(void*), alignof(void*)>::type Storage;
     using Storage = std::aligned_storage_t<sizeof(void*), alignof(void*)> ;
-    using Function = Ret(*)(void*, Args...);
+    using Function = Ret(*)(Storage /*void*/ *, Args...);
     
     Storage mData;
     Function mFunction;
@@ -77,64 +77,72 @@ private:
     template <typename Type>
     static void DestroyStorage(Delegate *delegate)
     {
-        reinterpret_cast<Type*>(&delegate->mData)->~Type();
+        reinterpret_cast<Type&>(delegate->mData).~Type();
     }
 
     template <typename Type>
     static void CopyStorage(const Delegate *src, Delegate *dst)
     {
-        new(&dst->mData) Type(*reinterpret_cast<const Type*>(&src->mData));
+        new(&dst->mData) Type(reinterpret_cast<const Type&>(src->mData));
     }
 
     template <typename Type>
     static void MoveStorage(Delegate *src, Delegate *dst)
     {
-        new(&dst->mData) Type(std::move(*reinterpret_cast<Type*>(&src->mData)));
+        new(&dst->mData) Type(std::move(reinterpret_cast<Type&>(src->mData)));
     }
 
     /**** stub functions ****/
     template <Ret(*FreeFunction)(Args...)>
-    static Ret Stub(void *data, Args... args)
+    static Ret Stub(Storage *data, Args... args)
     {
         return FreeFunction(std::forward<Args>(args)...);
     }
 
     template <typename Type, Ret(Type::*PtrToMemFun)(Args...)>
-    static Ret Stub(void *data, Args... args)
+    static Ret Stub(Storage /*void*/ *data, Args... args)
     {
-        Storage *storage = static_cast<Storage*>(data);
-        Type *instance = *reinterpret_cast<Type**>(storage);
+        //Storage *storage = static_cast<Storage*>(data);
+        //Type *instance = *reinterpret_cast<Type**>(storage);
+
+        Type *instance = *reinterpret_cast<Type**>(data);
 
         return (instance->*PtrToMemFun)(std::forward<Args>(args)...);
     }
 
     template <typename Type, Ret(Type::*PtrToConstMemFun)(Args...) const>
-    static Ret Stub(void *data, Args... args)
+    static Ret Stub(Storage /*void*/ *data, Args... args)
     {
-        Storage *storage = static_cast<Storage*>(data);
-        Type *instance = *reinterpret_cast<Type**>(storage);
+        //Storage *storage = static_cast<Storage*>(data);
+        //Type *instance = *reinterpret_cast<Type**>(storage);
+
+        Type *instance = *reinterpret_cast<Type**>(data);
 
         return (instance->*PtrToConstMemFun)(std::forward<Args>(args)...);
     }
 
     template <typename Type>
-    static Ret Stub(void *data, Args... args)
+    static Ret Stub(Storage /*void*/ *data, Args... args)
     {
-        Storage *storage = static_cast<Storage*>(data);
-        Type *instance = *reinterpret_cast<Type**>(storage);
+        //Storage *storage = static_cast<Storage*>(data);
+        //Type *instance = *reinterpret_cast<Type**>(storage);
+
+        Type *instance = *reinterpret_cast<Type**>(data);
 
         return (*instance)(std::forward<Args>(args)...);    
     }
 
     template <typename Type, typename>
-    static Ret Stub(void *data, Args... args)
+    static Ret Stub(Storage /*void*/ *data, Args... args)
     {
-        Storage *storage = static_cast<Storage*>(data);
-        Type *instance = reinterpret_cast<Type*>(storage);
+        //Storage *storage = static_cast<Storage*>(data);
+        //Type *instance = reinterpret_cast<Type*>(storage);
+
+        Type *instance = reinterpret_cast<Type*>(data);
 
         return (*instance)(std::forward<Args>(args)...);   
     }
-};
+};  // Delegate class
 
 template <typename Ret, typename... Args>
 Delegate<Ret(Args...)>::Delegate()

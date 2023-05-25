@@ -51,10 +51,10 @@ public:
 
     Delegate &operator=(Delegate &&other);
 
-    template <auto FreeFunction>
+    template <auto FreeFunction, typename = typename std::enable_if<std::is_function<typename std::remove_pointer<decltype(FreeFunction)>::type>::value>::type>
     void Bind();
 
-    template <auto Callable, typename Type>
+    template <auto MemberFunction, typename Type, typename = typename std::enable_if<std::is_member_function_pointer<decltype(MemberFunction)>::value>::type>
     void Bind(Type &instance);
 
     template <typename Type>
@@ -69,7 +69,7 @@ public:
 private:
     //typedef typename std::aligned_storage<sizeof(void*), alignof(void*)>::type Storage;
     using Storage = std::aligned_storage_t<sizeof(void*), alignof(void*)> ;
-    using Function = Ret(*)(void*, Args...);
+    using Function = Ret(*)(Storage /*void*/ *, Args...);
     
     Storage mData;
     Function mFunction;
@@ -88,19 +88,19 @@ private:
     template <typename Type>
     static void DestroyStorage(Delegate *delegate)
     {
-        reinterpret_cast<Type*>(&delegate->mData)->~Type();
+        reinterpret_cast<Type&>(delegate->mData).~Type();
     }
 
     template <typename Type>
     static void CopyStorage(const Delegate *src, Delegate *dst)
     {
-        new(&dst->mData) Type(*reinterpret_cast<const Type*>(&src->mData));
+        new(&dst->mData) Type(reinterpret_cast<const Type&>(src->mData));
     }
 
     template <typename Type>
     static void MoveStorage(Delegate *src, Delegate *dst)
     {
-        new(&dst->mData) Type(std::move(*reinterpret_cast<Type*>(&src->mData)));
+        new(&dst->mData) Type(std::move(reinterpret_cast<Type&>(src->mData)));
     }
 };
 
@@ -176,28 +176,29 @@ Delegate<Ret(Args...)> &Delegate<Ret(Args...)>::operator=(Delegate &&other)
 }
 
 template <typename Ret, typename... Args>
-template <auto FreeFunction>
+template <auto FreeFunction, typename>
 void Delegate<Ret(Args...)>::Bind()
 {
     new(&mData) std::nullptr_t(nullptr);
 
-    mFunction = +[](void*, Args... args) -> Ret
+    mFunction = +[](Storage /*void*/ *, Args... args) -> Ret
             {
                 return FreeFunction(std::forward<Args>(args)...);
             };
 }
 
 template <typename Ret, typename... Args>
-template <auto Callable, typename Type>
+template <auto MemberFunction, typename Type, typename>
 void Delegate<Ret(Args...)>::Bind(Type &instance)
 {
     new(&mData) Type*(&instance);
 
-    mFunction = +[](void *data, Args... args) -> Ret
+    mFunction = +[](Storage /*void*/ *data, Args... args) -> Ret
             {
-                Storage *storage = static_cast<Storage*>(data);
-                Type *instance = *reinterpret_cast<Type**>(storage);
-                return std::invoke(Callable, instance, std::forward<Args>(args)...);
+                //Storage *storage = static_cast<Storage*>(data);
+                //Type *instance = *reinterpret_cast<Type**>(storage);
+                Type *instance = *reinterpret_cast<Type**>(data);
+                return std::invoke(MemberFunction, instance, std::forward<Args>(args)...);
             };
 }
 
@@ -211,10 +212,11 @@ void Delegate<Ret(Args...)>::Bind(Type &&funObj)
     {
         new(&mData) std::remove_reference_t<Type>*(&funObj);
 
-        mFunction = +[](void *data, Args... args) -> Ret
+        mFunction = +[](Storage /*void*/ *data, Args... args) -> Ret
             {
-                Storage *storage = static_cast<Storage*>(data);
-                std::remove_reference_t<Type> *instance = *reinterpret_cast<std::remove_reference_t<Type>**>(storage);
+                //Storage *storage = static_cast<Storage*>(data);
+                //std::remove_reference_t<Type> *instance = *reinterpret_cast<std::remove_reference_t<Type>**>(storage);
+                std::remove_reference_t<Type> *instance = *reinterpret_cast<std::remove_reference_t<Type>**>(data);
                 return std::invoke(*instance, std::forward<Args>(args)...);
             };  
     }
@@ -224,10 +226,11 @@ void Delegate<Ret(Args...)>::Bind(Type &&funObj)
         mDestroyStorage = &DestroyStorage<Type>;
         mStored = true;
 
-        mFunction = +[](void *data, Args... args) -> Ret
+        mFunction = +[](Storage /*void*/ *data, Args... args) -> Ret
             {
-                Storage *storage = static_cast<Storage*>(data);
-                std::remove_reference_t<Type> *instance = reinterpret_cast<std::remove_reference_t<Type>*>(storage);
+                //Storage *storage = static_cast<Storage*>(data);
+                //std::remove_reference_t<Type> *instance = reinterpret_cast<std::remove_reference_t<Type>*>(storage);
+                std::remove_reference_t<Type> *instance = reinterpret_cast<std::remove_reference_t<Type>*>(data);
                 return std::invoke(*instance, std::forward<Args>(args)...);
             };  
     } 
@@ -242,7 +245,7 @@ Ret Delegate<Ret(Args...)>::operator()(Args... args)
 template <typename Ret, typename... Args>
 Ret Delegate<Ret(Args...)>::Invoke(Args... args)
 {
-    return mFunction(&mData, std::forward<Args>(args)...);
+    return(*this)(&mData, std::forward<Args>(args)...);
 }
 
 template <typename Ret, typename... Args>
