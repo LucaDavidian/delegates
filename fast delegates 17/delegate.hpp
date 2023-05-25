@@ -291,10 +291,10 @@ class MulticastDelegate<Ret(Args...)>
 public:
     MulticastDelegate(std::size_t size = 10U)  { mDelegates.reserve(size); }
     
-    template <auto Callable>
+    template <auto FreeFunction>
     void Bind();
 
-    template <auto Callable, typename Type>
+    template <auto MemberFunction, typename Type>
     void Bind(Type &instance);
 
     template <typename Type>
@@ -309,23 +309,23 @@ private:
 };
 
 template <typename Ret, typename... Args>
-template <auto Callable>
+template <auto FreeFunction>
 void MulticastDelegate<Ret(Args...)>::Bind()
 {
     Delegate<Ret(Args...)> delegate;
     mDelegates.push_back(delegate);
 
-    mDelegates.back().template Bind<Callable>();
+    mDelegates.back().template Bind<FreeFunction>();
 }
 
 template <typename Ret, typename... Args>
-template <auto Callable, typename Type>
+template <auto MemberFunction, typename Type>
 void MulticastDelegate<Ret(Args...)>::Bind(Type &instance)
 {
     Delegate<Ret(Args...)> delegate;
     mDelegates.push_back(delegate);
 
-    mDelegates.back().template Bind<Callable>(instance);
+    mDelegates.back().template Bind<MemberFunction>(instance);
 }
 
 template <typename Ret, typename... Args>
