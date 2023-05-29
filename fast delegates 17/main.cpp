@@ -24,6 +24,15 @@ int main(int argc, char **argv)
 {
     MyClass mc(10);
 
+    try 
+    {
+        d1.Invoke(0.2);
+    }
+    catch (DelegateNotBoundException exc)
+    {
+        std::cout << "delegate not bound!" << std::endl;
+    }
+
     d1.Bind<&MyClass::MemberFunction>(mc);
     d1(11.0);
 
@@ -32,7 +41,7 @@ int main(int argc, char **argv)
 
     MyClass const cmc(8);
 
-    //d3.Bind<const MyClass, &MyClass::MemberFunction>(cmc);
+    //d3.Bind<&MyClass::MemberFunction>(cmc);
     //d3(1.1);
 
     d3.Bind<&MyClass::ConstMemberFunction>(cmc);
