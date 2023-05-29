@@ -74,8 +74,11 @@ public:
 
     explicit operator bool() const { return mFunction; } 
 
-    Ret operator()(Args... args);
-    Ret Invoke(Args... args);
+    template <typename... FwdArgs>
+    Ret operator()(FwdArgs&&... args);
+
+    template <typename... FwdArgs>
+    Ret Invoke(FwdArgs&&... args);
 private:
     //typedef typename std::aligned_storage<sizeof(void*), alignof(void*)>::type Storage;
     using Storage = std::aligned_storage_t<sizeof(void*), alignof(void*)> ;
@@ -247,18 +250,20 @@ void Delegate<Ret(Args...)>::Bind(Type &&funObj)
 }
 
 template <typename Ret, typename... Args>
-Ret Delegate<Ret(Args...)>::operator()(Args... args)
+template <typename... FwdArgs>
+Ret Delegate<Ret(Args...)>::operator()(FwdArgs&&... args)
 {
     if (!*this)
         throw DelegateNotBoundException();
 
-    return mFunction(&mData, std::forward<Args>(args)...);
+    return mFunction(&mData, std::forward<FwdArgs>(args)...);
 }
 
 template <typename Ret, typename... Args>
-Ret Delegate<Ret(Args...)>::Invoke(Args... args)
+template <typename... FwdArgs>
+Ret Delegate<Ret(Args...)>::Invoke(FwdArgs&&... args)
 {
-    return (*this)(std::forward<Args>(args)...);
+    return (*this)(std::forward<FwdArgs>(args)...);
 }
 
 template <typename Ret, typename... Args>
