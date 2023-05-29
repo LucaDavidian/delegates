@@ -54,7 +54,7 @@ public:
     explicit operator bool() const { return mFunction != nullptr; }
 
     Ret operator()(Args... args) { return mFunction(&mData, std::forward<Args>(args)...); }
-    Ret Invoke(Args... args) { return (*this)(&mData, std::forward<Args>(args)...); }
+    Ret Invoke(Args... args) { return (*this)(std::forward<Args>(args)...); }
 private:
     //typedef typename std::aligned_storage<sizeof(void*), alignof(void*)>::type Storage;
     using Storage = std::aligned_storage_t<sizeof(void*), alignof(void*)> ;
