@@ -23,6 +23,16 @@
 #define MULTICAST_DELEGATE_RET_ONE_PARAM(delegateName, ret, par0)         typedef MulticastDelegate<ret(par0)> delegateName
 #define MULTICAST_DELEGATE_RET_TWO_PARAM(delegateName, ret, par0, par1)   typedef MulticastDelegate<ret(par0, par1)> delegateName
 
+/***** delegate exceptions *****/
+class DelegateNotBoundException : public std::exception
+{
+public:
+    const char *what() const noexcept override
+    {
+        return "delegate not bound";
+    }
+};
+
 /**** delegate primary class template (not defined) ****/
 template <typename Signature>
 class Delegate;
@@ -51,10 +61,10 @@ public:
 
     Delegate &operator=(Delegate &&other);
 
-    template <auto FreeFunction, typename = typename std::enable_if<std::is_function<typename std::remove_pointer<decltype(FreeFunction)>::type>::value>::type>
+    template <auto FreeFunction, typename = typename std::enable_if<std::is_function<typename std::remove_pointer<decltype(FreeFunction)>::type>::value && std::is_invocable_r<Ret, decltype(FreeFunction), Args...>::value>::type>
     void Bind();
 
-    template <auto MemberFunction, typename Type, typename = typename std::enable_if<std::is_member_function_pointer<decltype(MemberFunction)>::value>::type>
+    template <auto MemberFunction, typename Type, typename = typename std::enable_if<std::is_member_function_pointer<decltype(MemberFunction)>::value && std::is_invocable_r<Ret, decltype(MemberFunction), Type, Args...>::value>::type>
     void Bind(Type &instance);
 
     template <typename Type>
@@ -239,13 +249,16 @@ void Delegate<Ret(Args...)>::Bind(Type &&funObj)
 template <typename Ret, typename... Args>
 Ret Delegate<Ret(Args...)>::operator()(Args... args)
 {
+    if (!*this)
+        throw DelegateNotBoundException();
+
     return mFunction(&mData, std::forward<Args>(args)...);
 }
 
 template <typename Ret, typename... Args>
 Ret Delegate<Ret(Args...)>::Invoke(Args... args)
 {
-    return(*this)(&mData, std::forward<Args>(args)...);
+    return (*this)(std::forward<Args>(args)...);
 }
 
 template <typename Ret, typename... Args>
