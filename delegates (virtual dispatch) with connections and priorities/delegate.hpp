@@ -46,14 +46,14 @@ template <typename Signature>
 class Delegate;
 
 /**** namespace scope swap ****/
-template <typename Ret, typename... Args>
-void swap(Delegate<Ret(Args...)> &d1, Delegate<Ret(Args...)> &d2)
+template <typename Signature>
+void swap(Delegate<Signature> &d1, Delegate<Signature> &d2)
 {
     d1.Swap(d2);
 }
 
-template <typename Ret, typename... Args>
-bool operator<(Delegate<Ret(Args...)> const &d1, Delegate<Ret(Args...)> const &d2)
+template <typename Signature>
+bool operator<(Delegate<Signature> const &d1, Delegate<Signature> const &d2)
 {
     return d1.mPriority < d2.mPriority;
 }
@@ -63,7 +63,7 @@ template <typename Ret, typename... Args>
 class Delegate<Ret(Args...)> 
 {
 friend class Signal<Ret(Args...)>;
-friend bool operator< <>(Delegate const &, Delegate const &);
+friend bool operator< <Ret(Args...)>(Delegate const &, Delegate const &);
 public:
     Delegate() : mCallableWrapper(nullptr) {}
 

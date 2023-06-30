@@ -46,8 +46,8 @@ template <typename Signature>
 class Delegate;
 
 /**** namespace scope swap ****/
-template <typename Ret, typename... Args>
-void swap(Delegate<Ret(Args...)> &d1, Delegate<Ret(Args...)> &d2)
+template <typename Signature>
+void swap(Delegate<Signature> &d1, Delegate<Signature> &d2)
 {
     d1.Swap(d2);
 }
